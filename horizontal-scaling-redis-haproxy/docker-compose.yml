@@ -1,0 +1,66 @@
+version: '3'
+
+services:
+  lb:
+    image: haproxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./haproxy:/usr/local/etc/haproxy
+    depends_on:
+      - ws1
+      - ws2
+      - ws3
+      - ws4
+    networks:
+      - app-network
+
+  ws1:
+    image: wsapp
+    environment:
+      - APPID=1111
+    depends_on:
+      - rds
+    networks:
+      - app-network
+
+  ws2:
+    image: wsapp
+    environment:
+      - APPID=2222
+    depends_on:
+      - rds
+    networks:
+      - app-network
+
+  ws3:
+    image: wsapp
+    environment:
+      - APPID=3333
+    depends_on:
+      - rds
+    networks:
+      - app-network
+
+  ws4:
+    image: wsapp
+    environment:
+      - APPID=4444
+    depends_on:
+      - rds
+    networks:
+      - app-network
+
+  rds:
+    image: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
