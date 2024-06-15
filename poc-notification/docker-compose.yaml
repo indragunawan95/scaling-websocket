@@ -4,8 +4,15 @@ services:
   redis:
     image: redis:latest
     container_name: redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "6379:6379"
+    networks:
+      - app-network
     volumes:
       - redis-data:/data
 
@@ -20,6 +27,102 @@ services:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  lb:
+    image: haproxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./haproxy:/usr/local/etc/haproxy
+    depends_on:
+      - ws1
+      - ws2
+      - ws3
+      - ws4
+    networks:
+      - app-network
+
+  ws1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=1111
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - ./websocket-server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+    ports:
+      - "3001:3000"
+
+  ws2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=2222
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - ./websocket-server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+    ports:
+      - "3002:3000"
+
+  ws3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=3333
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - ./websocket-server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+    ports:
+      - "3003:3000"
+
+  ws4:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=4444
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - app-network
+    volumes:
+      - ./websocket-server:/usr/src/app
+      - /usr/src/app/node_modules
+    command: npm run start:dev
+    ports:
+      - "3004:3000"
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   redis-data:
