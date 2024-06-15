@@ -4,8 +4,8 @@ import {
     WebSocketGateway,
     WebSocketServer,
     WsResponse,
-    OnGatewayConnection,
-    OnGatewayDisconnect,
+    OnGatewayConnection, 
+    OnGatewayDisconnect, 
     OnGatewayInit,
     ConnectedSocket
 } from '@nestjs/websockets';
@@ -18,7 +18,7 @@ import { Server, Socket } from 'socket.io';
         origin: '*',
     },
 })
-export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
+export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
 
