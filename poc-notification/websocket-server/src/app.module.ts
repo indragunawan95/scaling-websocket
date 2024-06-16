@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-// import { RedisModule } from './redis/redis.module';
+import { RedisModule } from './redis/redis.module';
 import { WebSocketModule } from './websocket/websocket.module';
 // import { PrismaModule } from './prisma/prisma.module';
 import { HealthController } from './health.controller';
@@ -12,7 +12,7 @@ import { HealthController } from './health.controller';
       isGlobal: true,
     }),
     // EventsModule,
-    // RedisModule,
+    RedisModule,
     WebSocketModule,
     // PrismaModule,
   ],

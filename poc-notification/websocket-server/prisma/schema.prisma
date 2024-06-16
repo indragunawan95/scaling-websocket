@@ -14,7 +14,49 @@ datasource db {
 }
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  name               String?
+  onlineStatus       Boolean             @default(false)
+  groups             UserGroup[]         @relation("UserGroups")
+  userNotifications  UserNotification[]
+}
+
+model Group {
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  users              UserGroup[]         @relation("UserGroups")
+  groupNotifications GroupNotification[]
+}
+
+model UserGroup {
+  userId             Int
+  groupId            Int
+  user               User   @relation(fields: [userId], references: [id], name: "UserGroups")
+  group              Group  @relation(fields: [groupId], references: [id], name: "UserGroups")
+
+  @@id([userId, groupId])
+  @@unique([userId, groupId])
+}
+
+model UserNotification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  content   String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model GroupNotification {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  content   String
+  createdAt DateTime @default(now())
+  group     Group    @relation(fields: [groupId], references: [id])
+}
+
+model BroadcastNotification {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
 }
