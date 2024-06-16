@@ -11,7 +11,13 @@ import {
 } from '@nestjs/websockets';
 import { from, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+
+interface ClientInfo {
+    id: string;
+    lastConnected: Date;
+}
 
 @WebSocketGateway({
     cors: {
@@ -22,19 +28,27 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
     @WebSocketServer()
     server: Server;
 
+    private logger: Logger = new Logger('AppGateway');
+    private clients: Map<string, ClientInfo> = new Map();
+
     afterInit(server: Server) {
         console.log('WebSocket server initialized');
         // this.webSocketService.setServer(server);
     }
 
     handleConnection(client: Socket) {
-        console.log(`Client connected: ${client.id}`);
-        // this.webSocketService.handleConnection(client);
+        const clientInfo: ClientInfo = {
+            id: client.id,
+            lastConnected: new Date(),
+        };
+        this.clients.set(client.id, clientInfo);
+        this.logger.log(`Client connected: ${client.id}`);
+        client.emit('connected', 'Welcome!');
     }
 
     handleDisconnect(client: Socket) {
-        console.log(`Client disconnected: ${client.id}`);
-        // this.webSocketService.handleDisconnect(client);
+        this.clients.delete(client.id);
+        this.logger.log(`Client disconnected: ${client.id}`);
     }
 
     @SubscribeMessage('events')
