@@ -10,10 +10,13 @@ export class AppService {
     return 'Hello World!';
   }
 
-  sendMessageToClient(userId: string, clientId: string, message: string) {
-    this.appWebSocketGateway.sendMessageToClient(userId, clientId, message);
-  }
+  // sendMessageToClient(userId: string, clientId: string, message: string) {
+  //   this.appWebSocketGateway.sendMessageToClient(userId, clientId, message);
+  // }
   sendMessageToUser(userId: string, message: string) {
     this.appWebSocketGateway.publishToUser(userId, message)
+  }
+  sendMessageToGroup(groupId: string, message: string) {
+    this.appWebSocketGateway.publishToGroup(groupId, message)
   }
 }
