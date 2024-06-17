@@ -36,8 +36,10 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
         this.redisService.setMessageHandler(this.handleRedisMessage.bind(this));
     }
 
-    afterInit(server: Server) {
+    async afterInit(server: Server) {
         console.log('WebSocket server initialized');
+        await this.redisService.subscribe('broadcast');
+        this.subscribedUsers.add('broadcast');
     }
 
     async handleConnection(client: Socket) {
@@ -83,7 +85,7 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
         this.logger.log(`Client connected: ${clientId} for user: ${userId}`);
         client.emit('connected', 'Welcome!');
         // fetch current notifications
-        this.fetchUserNotification(userId)
+        this.fetchUserNotification(userId);
     }
 
     async handleDisconnect(client: Socket) {
@@ -121,11 +123,6 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
         this.logger.log(`Client disconnected: ${clientId} for user: ${userId}`);
     }
 
-    @SubscribeMessage('message')
-    handleMessage(@MessageBody() payload: any, @ConnectedSocket() client: Socket) {
-        console.log(`Message received from client ${client.id}: ${payload}`);
-    }
-
     @SubscribeMessage('getGroups')
     async handleGetGroup(@MessageBody() payload: any, @ConnectedSocket() client: Socket) {
         const { userId } = payload;
@@ -137,7 +134,7 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
                 group: true
             }
         });
-        const groups = userGroups.map(x => x.group)
+        const groups = userGroups.map(x => x.group);
         this.sendMessageToClient(userId, client.id, 'getGroups', groups);
     }
 
@@ -154,18 +151,10 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
 
     async sendMessageToUser(userId: string, message: string) {
         const userClients = this.clients.get(userId);
-        const notification = await this.prismaService.userNotification.findMany({
-            where: {
-                userId: Number(userId)
-            },
-            orderBy: {
-                createdAt: 'desc'
-            }
-        });
-        const notificationMsg = notification.map((x) => x.content);
+        const notifications = await this.fetchUserNotification(userId);
         if (userClients) {
             userClients.forEach(clientInfo => {
-                this.server.to(clientInfo.id).emit('notification', notificationMsg);
+                this.server.to(clientInfo.id).emit('notification', notifications);
                 this.logger.log(`Message sent to client ${clientInfo.id} for user ${userId}: ${message}`);
             });
         } else {
@@ -182,7 +171,6 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
                 userId: Number(userId)
             },
             select: {
-                id: true,
                 content: true,
                 createdAt: true
             }
@@ -208,27 +196,37 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
                 }
             },
             select: {
-                id: true,
+                content: true,
+                createdAt: true
+            }
+        });
+
+        // Fetch broadcast notifications
+        const broadcastNotifications = await this.prismaService.broadcastNotification.findMany({
+            select: {
                 content: true,
                 createdAt: true
             }
         });
 
         // Combine and sort notifications by createdAt
-        const notifications = [...userNotifications, ...groupNotifications].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-
-        const notificationMsg = notifications.map(notification => notification.content);
+        const notifications = [
+            ...userNotifications.map(notification => ({ ...notification, type: 'user' })),
+            ...groupNotifications.map(notification => ({ ...notification, type: 'group' })),
+            ...broadcastNotifications.map(notification => ({ ...notification, type: 'broadcast' }))
+        ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
         if (userClients) {
             userClients.forEach(clientInfo => {
-                this.server.to(clientInfo.id).emit('notification', notificationMsg);
+                this.server.to(clientInfo.id).emit('notification', notifications);
                 this.logger.log(`Notifications sent to client ${clientInfo.id} for user ${userId}`);
             });
         } else {
             this.logger.warn(`No clients found for user ${userId}`);
         }
-    }
 
+        return notifications;
+    }
 
     async publishToUser(userId: string, message: string) {
         await this.prismaService.userNotification.create({
@@ -252,6 +250,17 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
         await this.redisService.publish(`group:${groupId}`, message);
     }
 
+    async publishToBroadcast(message: string) {
+        // Insert message into the database
+        await this.prismaService.broadcastNotification.create({
+            data: {
+                content: message
+            }
+        });
+        // Publish to the Redis PubSub channel for broadcast
+        await this.redisService.publish(`broadcast`, message);
+    }
+
     private async handleRedisMessage(channel: string, message: string) {
         if (channel.startsWith('user:')) {
             const userId = channel.split(':')[1];
@@ -264,6 +273,11 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
                 for (const userId of groupUsers) {
                     await this.fetchUserNotification(userId);
                 }
+            }
+        } else if (channel === 'broadcast') {
+            // Fetch all users and send the broadcast message
+            for (const userId of this.clients.keys()) {
+                await this.fetchUserNotification(userId);
             }
         }
     }

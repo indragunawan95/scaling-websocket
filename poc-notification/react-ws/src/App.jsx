@@ -44,8 +44,10 @@ const Home = () => {
 
 const UserNotifications = () => {
   const { id } = useParams();
-  const [messages, setMessages] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [error, setError] = useState('');
+  const [groups, setGroups] = useState([]);
+  const socketRef = React.useRef(null);
 
   useEffect(() => {
     const socket = io(SOCKET_SERVER_URL, {
@@ -56,6 +58,8 @@ const UserNotifications = () => {
       reconnectionDelayMax: 5000,
       randomizationFactor: 0.5,
     });
+
+    socketRef.current = socket;
 
     socket.on('connect', () => {
       console.log('Connected to server');
@@ -81,10 +85,14 @@ const UserNotifications = () => {
       console.log(message);
     });
 
-    socket.on('notification', (message) => {
-      console.log("msg", message)
-      console.log("messages", messages)
-      setMessages(message);
+    socket.emit('getGroups', { userId: id });
+
+    socket.on('getGroups', (groups) => {
+      setGroups(groups);
+    });
+
+    socket.on('notification', (notifications) => {
+      setNotifications(notifications);
     });
 
     socket.on('error', (message) => {
@@ -103,11 +111,25 @@ const UserNotifications = () => {
       ) : (
         <>
           <h1>Notifications for User: {id}</h1>
-          <div className="message-list">
-            {messages.map((message, index) => (
-              <div key={index} className="message">
-                {message}
+          <div className="group-list">
+            <h2>Groups</h2>
+            {groups.map((group) => (
+              <div key={group.id} className="group">
+                <span>{group.name}</span>
               </div>
+            ))}
+          </div>
+          <div className="message-list">
+            <h2>Notifications</h2>
+            {notifications.map((notification, index) => (
+              <>
+                <div key={index} className="message">
+                  {notification.content}
+                  <div key={index} className="notification-type">
+                    {notification.type}
+                  </div>
+                </div>
+              </>
             ))}
           </div>
         </>

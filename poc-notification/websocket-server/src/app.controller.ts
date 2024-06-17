@@ -23,8 +23,14 @@ export class AppController {
     @Query('groupId') groupId: string,
     @Query('message') message: string,
   ) {
-    console.log("here")
     this.appService.sendMessageToGroup(groupId, message);
     return `Message sent to group ${groupId}`;
+  }
+  @Get('send-message-broadcast')
+  sendMessageBroadcast(
+    @Query('message') message: string,
+  ) {
+    this.appService.sendMessageToBroadcast(message);
+    return `Message sent to broadcast`;
   }
 }

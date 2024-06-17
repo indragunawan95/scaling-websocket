@@ -19,4 +19,7 @@ export class AppService {
   sendMessageToGroup(groupId: string, message: string) {
     this.appWebSocketGateway.publishToGroup(groupId, message)
   }
+  sendMessageToBroadcast(message: string) {
+    this.appWebSocketGateway.publishToBroadcast(message)
+  }
 }
