@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:latest
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+    volumes:
+      - redis-data:/data
+
+  lb:
+    image: haproxy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./haproxy:/usr/local/etc/haproxy
+    depends_on:
+      - ws1
+      - ws2
+    networks:
+      - app-network
+
+  ws1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=1111
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  ws2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - APPID=1111
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  redis-data:
+  postgres-data:
