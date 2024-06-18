@@ -17,20 +17,21 @@ import { PrismaService } from "src/prisma/prisma.service";
         origin: '*',
     },
 })
-export class AppWebSocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
     @WebSocketServer()
     server: Server;
 
     private readonly logger = new Logger(AppWebSocketGateway.name);
 
-    constructor(private readonly prisma: PrismaService) {
+    constructor(private readonly prisma: PrismaService) {}
+
+    afterInit(server: any) {
         this.logger.log('AppWebSocketGateway initialized');
     }
 
     async handleConnection(client: Socket) {
         console.log(`${client.id} connected`)
         const userId = client.handshake.query.userId as string;
-        const lastNotificationId = parseInt(client.handshake.query.lastNotificationId as string, 10);
 
         if (userId) {
             client.join(userId);
@@ -40,6 +41,7 @@ export class AppWebSocketGateway implements OnGatewayConnection, OnGatewayDiscon
                 orderBy: { createdAt: 'desc' },
             });
             client.emit('notification', missedNotifications);
+            console.log("notification ter kirim")
         }
     }
 
@@ -65,7 +67,7 @@ export class AppWebSocketGateway implements OnGatewayConnection, OnGatewayDiscon
             where: { userId },
             orderBy: { createdAt: 'desc' },
         });
-        // blom handle group and broadcast
+        // not handle group and broadcast
         if (broadcast) {
             this.server.emit('notification', missedNotifications);
         } else if (userId) {

@@ -18,6 +18,6 @@ import { AppWebSocketGateway } from "./websocket/websocket.gateway";
     PrismaModule,
   ],
   controllers: [HealthController, AppController],
-  providers: [AppService, AppWebSocketGateway]
+  providers: [AppService]
 })
 export class AppModule { }

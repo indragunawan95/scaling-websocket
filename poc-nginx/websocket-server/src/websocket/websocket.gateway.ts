@@ -10,7 +10,6 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
-import { RedisService } from '../redis/redis.service';
 
 interface ClientInfo {
     id: string;
@@ -30,7 +29,7 @@ export class AppWebSocketGateway implements OnGatewayInit, OnGatewayConnection, 
 
     private logger: Logger = new Logger('AppGateway');
 
-    constructor(private readonly redisService: RedisService) {}
+    constructor() {}
 
     async afterInit(server: Server) {
         console.log('WebSocket server initialized');

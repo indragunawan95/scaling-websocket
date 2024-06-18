@@ -11,3 +11,6 @@ Using $remote_addr, IP address as hash to make connection sticky.
 
 # Redis Adapter
 We can use Redis adapter for in memory proses move to redis.
+
+- WebAPI Gateway on Nest.js send twice
+    - because WebsocketGateway in provider array twice
