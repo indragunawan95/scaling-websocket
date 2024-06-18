@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { RedisModule } from './redis/redis.module';
 import { WebSocketModule } from './websocket/websocket.module';
 import { HealthController } from './health.controller';
 import { AppController } from "./app.controller";
@@ -13,10 +14,10 @@ import { AppWebSocketGateway } from "./websocket/websocket.gateway";
       isGlobal: true,
     }),
     // EventsModule,
-    // RedisModule,
+    RedisModule,
     WebSocketModule,
   ],
   controllers: [HealthController, AppController],
-  providers: [AppService]
+  providers: [AppService, AppWebSocketGateway]
 })
 export class AppModule { }

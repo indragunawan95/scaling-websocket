@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket.IO Client</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+</head>
+
+<body>
+    <h1>Socket.IO Client</h1>
+    <div>
+        <button id="connectButton">Connect</button>
+        <button id="disconnectButton" disabled>Disconnect</button>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        const connectButton = document.getElementById('connectButton');
+        const disconnectButton = document.getElementById('disconnectButton');
+        const logDiv = document.getElementById('log');
+        let socket;
+
+        connectButton.addEventListener('click', () => {
+            socket = io('http://localhost:3001', {
+                query: {
+                    userId: 'user123',
+                    lastNotificationId: '0'
+                }
+            });
+
+            socket.on('connect', () => {
+                log('Connected to server');
+                connectButton.disabled = true;
+                disconnectButton.disabled = false;
+            });
+
+            socket.on('disconnect', () => {
+                log('Disconnected from server');
+                connectButton.disabled = false;
+                disconnectButton.disabled = true;
+            });
+
+            socket.on('notification', (data) => {
+                log('Received notification: ' + JSON.stringify(data));
+            });
+
+            socket.on('error', (error) => {
+                log('Error: ' + error);
+            });
+        });
+
+        disconnectButton.addEventListener('click', () => {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+
+        function log(message) {
+            const p = document.createElement('p');
+            p.textContent = message;
+            logDiv.appendChild(p);
+        }
+    </script>
+</body>
+
+</html>
