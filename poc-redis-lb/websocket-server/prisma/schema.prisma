@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int                @id @default(autoincrement())
+  username      String
+  email         String
+  created_at    DateTime           @default(now())
+  notifications UserNotification[]
+  userGroups    UserGroup[]
+  Notification  Notification[]
+}
+
+model Group {
+  id           Int                 @id @default(autoincrement())
+  name         String
+  created_at         DateTime            @default(now())
+  groupNotifications GroupNotification[]
+  userGroups         UserGroup[]
+}
+
+model UserGroup {
+  user_id  Int
+  group_id Int
+
+  user  User  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, group_id])
+}
+
+model Notification {
+  notification_id   Int              @id @default(autoincrement())
+  sender_id         Int?
+  content           String
+  notification_type NotificationType
+  created_at        DateTime         @default(now())
+
+  sender                User?                  @relation(fields: [sender_id], references: [id])
+  userNotifications     UserNotification[]
+  groupNotifications    GroupNotification[]
+  broadcastNotification BroadcastNotification?
+}
+
+model UserNotification {
+  notification_id Int
+  user_id         Int
+
+  notification Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([notification_id, user_id])
+}
+
+model GroupNotification {
+  notification_id Int
+  group_id        Int
+
+  notification Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+  group        Group        @relation(fields: [group_id], references: [id], onDelete: Cascade)
+
+  @@id([notification_id, group_id])
+}
+
+model BroadcastNotification {
+  notification_id Int @id
+
+  notification Notification @relation(fields: [notification_id], references: [notification_id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  USER
+  GROUP
+  BROADCAST
+}

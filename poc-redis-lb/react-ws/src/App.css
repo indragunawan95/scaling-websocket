@@ -1,0 +1,108 @@
+body {
+  background-color: #ffffff;
+  font-family: Arial, sans-serif;
+}
+
+.App {
+  text-align: center;
+  padding: 20px;
+}
+
+.form {
+  margin: 20px auto;
+  width: 300px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.form input {
+  width: 80%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+}
+
+.form button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.form button:hover {
+  background-color: #0056b3;
+}
+
+.message-list {
+  margin: 20px auto;
+  width: 80%;
+  max-width: 600px;
+  text-align: left;
+  background-color: #ffffff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.message {
+  background-color: #f1f1f1;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.group-list {
+  margin: 20px auto;
+  width: 80%;
+  max-width: 600px;
+  text-align: left;
+  background-color: #ffffff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.group {
+  background-color: #f1f1f1;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  color: #333;
+  border: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.notification-type {
+  background-color: #f1f1f1;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 5px;
+  color: #333;
+  border: 1px solid #ccc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+h1 {
+  color: #333;
+}
+
+h2 {
+  color: #333;
+}
+
+.error-message {
+  color: red;
+  font-weight: bold;
+  font-size: 18px;
+  margin: 20px;
+}
